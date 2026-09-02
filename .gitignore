@@ -104,6 +104,9 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+<<<<<<< HEAD
 
 # VS Code directories
 .vscode/
+=======
+>>>>>>> 8d17d73ebf437a21bd85d38439c94873a21ba739
