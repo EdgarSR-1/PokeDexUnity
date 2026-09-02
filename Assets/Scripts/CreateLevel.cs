@@ -14,50 +14,37 @@ public class CreateLevel : MonoBehaviour
     [SerializeField]
     GameObject pokeCardObj;
 
-    // Botón para ir a la página anterior
     [SerializeField]
     Button leftButton;
 
-    // Botón para ir a la página siguiente
     [SerializeField]
     Button rightButton;
 
-    // Página actual
     int currentPage = 0;
 
-    // Pokémon que aparecerán en cada página
     const int pokemonPerPage = 40;
 
-    // Número total de páginas
     int totalPages = 0;
 
-    // Evita que el usuario cambie de página
-    // mientras se está descargando otra
     bool isLoading = false;
 
-    // Guarda las tarjetas creadas actualmente
-    // para poder destruirlas al cambiar de página
     List<GameObject> currentCards = new List<GameObject>();
 
 
     void Start()
     {
-        // Conectar los botones con sus funciones
         leftButton.onClick.AddListener(PreviousPage);
         rightButton.onClick.AddListener(NextPage);
 
-        // Cargar la primera página
         StartCoroutine(LoadPokemonPage());
     }
 
 
     public void NextPage()
     {
-        // No permitir cambiar mientras está cargando
         if (isLoading)
             return;
 
-        // Solo avanzar si no estamos en la última página
         if (currentPage < totalPages - 1)
         {
             currentPage++;
@@ -69,11 +56,9 @@ public class CreateLevel : MonoBehaviour
 
     public void PreviousPage()
     {
-        // No permitir cambiar mientras está cargando
         if (isLoading)
             return;
 
-        // Solo retroceder si no estamos en la primera página
         if (currentPage > 0)
         {
             currentPage--;
@@ -91,16 +76,10 @@ public class CreateLevel : MonoBehaviour
         leftButton.interactable = false;
         rightButton.interactable = false;
 
-
-        // Eliminar los Pokémon de la página anterior
         ClearCurrentPage();
 
-
-        // Calcular desde qué Pokémon empieza esta página
         int offset = currentPage * pokemonPerPage;
 
-
-        // Crear URL
         string pageURL =
             SD.baseURL +
             "?limit=" +
@@ -120,27 +99,20 @@ public class CreateLevel : MonoBehaviour
 
         Debug.Log("Result: " + handler.result);
 
-
-        // Convertir JSON a PokemonList
         pokemonList =
             JsonUtility.FromJson<PokemonList>(
                 handler.result
             );
 
-
-        // Calcular cuántas páginas existen
         totalPages =
             Mathf.CeilToInt(
                 (float)pokemonList.count /
                 pokemonPerPage
             );
 
-
-        // Crear las tarjetas de los 40 Pokémon
         yield return StartCoroutine(PopulateBoard());
 
 
-        // Actualizar botones
         UpdateButtons();
 
 
@@ -152,7 +124,6 @@ public class CreateLevel : MonoBehaviour
     {
         foreach (pokeObj pokemon in pokemonList.results)
         {
-            // Crear tarjeta
             GameObject PokemonObj =
                 Instantiate(
                     pokeCardObj,
@@ -161,20 +132,13 @@ public class CreateLevel : MonoBehaviour
                     transform
                 );
 
-
-            // Obtener el script de la tarjeta
             PokeCardHandler cardHandler =
                 PokemonObj.GetComponent<PokeCardHandler>();
 
-
-            // AQUÍ mantenemos "name" como lo tienes actualmente
             cardHandler.name = pokemon.name;
 
             cardHandler.url = pokemon.url;
 
-
-            // Guardar la tarjeta para destruirla
-            // cuando cambiemos de página
             currentCards.Add(PokemonObj);
 
 
@@ -182,8 +146,6 @@ public class CreateLevel : MonoBehaviour
                 "Pokemon creado: " + pokemon.name
             );
 
-
-            // Esperar un frame antes de crear el siguiente
             yield return null;
         }
     }
@@ -206,14 +168,8 @@ public class CreateLevel : MonoBehaviour
 
     void UpdateButtons()
     {
-        // Botón izquierdo solo funciona
-        // si no estamos en la primera página
         leftButton.interactable =
             currentPage > 0;
-
-
-        // Botón derecho solo funciona
-        // si no estamos en la última página
         rightButton.interactable =
             currentPage < totalPages - 1;
     }

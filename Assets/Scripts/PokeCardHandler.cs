@@ -1,60 +1,111 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Networking;
-using System;
 
 public class PokeCardHandler : MonoBehaviour
 {
-    public string name;
-    public string url;
-    public RawImage pokeImage;
-    public TextMeshProUGUI text;
+public string name;
+public string url;
 
-    [SerializeField]
-    private PokeCard card;
+public RawImage pokeImage;
+public TextMeshProUGUI text;
 
-    HttpRequestHandler handler = new HttpRequestHandler();
+[SerializeField]
+private PokeCard card;
 
-    void Start()
+private HttpRequestHandler handler =
+    new HttpRequestHandler();
+
+private Button button;
+
+
+void Start()
+{
+    pokeImage = GetComponent<RawImage>();
+
+    text =
+        GetComponentInChildren<TextMeshProUGUI>();
+
+    button = GetComponent<Button>();
+
+    button.onClick.AddListener(OpenDetails);
+
+    StartCoroutine(GetPokemon());
+}
+
+
+IEnumerator GetPokemon()
+{
+    handler.method = "GET";
+
+    yield return StartCoroutine(
+        handler.ExecuteRequest(url)
+    );
+
+    Debug.Log("Result: " + handler.result);
+
+    card =
+        JsonUtility.FromJson<PokeCard>(
+            handler.result
+        );
+
+    if (card != null &&
+        card.sprites != null &&
+        card.sprites.front_default != null)
     {
-        pokeImage = GetComponent<RawImage>();
-        StartCoroutine(GetPokemon());
-        text = GetComponentInChildren<TextMeshProUGUI>();
+        StartCoroutine(AddImage());
     }
-
-    IEnumerator GetPokemon()
+    else
     {
-        handler.method = "GET";
-        yield return StartCoroutine(handler.ExecuteRequest(url));
-        Debug.Log("Result: " + handler.result);
-        card = JsonUtility.FromJson<PokeCard>(handler.result);
-        if(card.sprites.front_default != null)
-        {
-            StartCoroutine(addImage());
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        Destroy(gameObject);
     }
+}
 
-    IEnumerator addImage()
+
+IEnumerator AddImage()
+{
+    UnityWebRequest spriteRequest =
+        UnityWebRequestTexture.GetTexture(
+            card.sprites.front_default
+        );
+
+    yield return spriteRequest.SendWebRequest();
+
+    if (spriteRequest.result !=
+        UnityWebRequest.Result.Success)
     {
-        UnityWebRequest spriteRequest = UnityWebRequestTexture.GetTexture(card.sprites.front_default);
-        yield return spriteRequest.SendWebRequest();
-        if (spriteRequest.result != UnityWebRequest.Result.Success)
-        {
-            Debug.Log(spriteRequest.error);
-            Destroy(gameObject);
-        }
-        else
-        {
-            Debug.Log("Sprite request success: " + spriteRequest.responseCode);
-            pokeImage.texture = ((DownloadHandlerTexture)spriteRequest.downloadHandler).texture;
-            text.text = name;
-        }
+        Debug.Log(spriteRequest.error);
+
+        Destroy(gameObject);
     }
+    else
+    {
+        Debug.Log(
+            "Sprite request success: " +
+            spriteRequest.responseCode
+        );
+
+        Texture2D texture =
+        DownloadHandlerTexture.GetContent(spriteRequest);
+
+        texture.filterMode = FilterMode.Point;
+
+        pokeImage.texture = texture;
+
+        text.text = name;
+    }
+}
+
+
+void OpenDetails()
+{
+    if (card != null)
+    {
+        PokemonDetailsPanel.Instance
+            .ShowPokemon(card);
+    }
+}
+
 }
