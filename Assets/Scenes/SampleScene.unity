@@ -817,6 +817,8 @@ MonoBehaviour:
     previous: 
     results: []
   pokeCardObj: {fileID: 2636992504090147401, guid: 779bb3e4b4df3f4cead1d0d731478abb, type: 3}
+  leftButton: {fileID: 87319068}
+  rightButton: {fileID: 1204391463}
 --- !u!114 &1511763043
 MonoBehaviour:
   m_ObjectHideFlags: 0
